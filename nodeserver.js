@@ -1,33 +1,44 @@
-// nodeserver.js
-import express from 'express';
-import cors from 'cors';
-import bodyParser from 'body-parser';
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
+
+const remindersRouter = require('./routes/reminders.js');
 
 const app = express();
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
-// Basic route to test
-app.get('/', (req, res) => {
-  res.send(`🧪 Mock server running on port ${process.env.PORT || 5002}`);
+// Routes
+app.use('/api/reminders', remindersRouter);
+
+// Health check
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+// Start server
+const PORT = process.env.PORT || 5001;
+const server = app.listen(PORT, () => {
+  console.log(`🚀 nodeserver running on port ${PORT}`);
 });
 
-// Example mock endpoint
-app.get('/api/mockdata', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Mock API is live!',
-    data: [
-      { id: 1, name: 'Alice', balance: 2300 },
-      { id: 2, name: 'Bob', balance: 1450 },
-    ],
+// Graceful shutdown helper
+const shutdown = (signal) => {
+  console.log(`Received ${signal}. Shutting down server...`);
+  server.close(() => {
+    console.log('HTTP server closed.');
+    // close DB pool if available
+    try {
+      const db = require('./db');
+      if (db && db.pool) db.pool.end(() => console.log('DB pool closed.'));
+    } catch (err) {
+      // ignore
+    }
+    process.exit(0);
   });
-});
+};
 
-// Start the server
-const PORT = process.env.PORT || 5002;
-app.listen(PORT, () => {
-  console.log(`✅ Mock server running on port ${PORT}`);
-});
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+
+module.exports = { app, server };
