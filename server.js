@@ -1,24 +1,29 @@
-// server.js - entrypoint that starts the app and tests DB connectivity
-require('dotenv').config();
-const app = require('./app');
-const db = require('./db');
+// server.js - Entry point (ESM)
+import dotenv from "dotenv";
+dotenv.config();
+
+import app from "./app.js";
+import db from "./db/index.js";
 
 const PORT = process.env.PORT || 5001;
 
 const startServer = async () => {
   try {
-    // Lightweight DB test to show status on startup
-    await db.pool.query('SELECT 1');
-    console.log('\u2705 Database connected successfully');
+    // Test DB connection
+    const result = await db.query("SELECT 1");
+    console.log("✅ Database connected successfully");
   } catch (err) {
-    console.error('\u26A0\ufe0f Database connection test failed:', err && (err.message || err));
-    console.error('The server will still start so you can use mock mode or debug, but DB operations may fail.');
+    console.error("⚠️ Database connection test failed:");
+    console.error(err.message || err);
+
+    console.log(
+      "🚨 WARNING: The server will continue running, but database operations may fail."
+    );
   }
 
   app.listen(PORT, () => {
-    console.log(`\ud83d\ude80 Server running on port ${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
   });
 };
 
 startServer();
-

@@ -1,16 +1,27 @@
-// db/index.js
-import pkg from 'pg';
+import pkg from "pg";
+import dotenv from "dotenv";
+dotenv.config();
+
 const { Pool } = pkg;
 
+// Validate
+if (!process.env.DATABASE_URL) {
+  console.error("❌ Missing DATABASE_URL in .env file");
+  process.exit(1);
+}
+
 const pool = new Pool({
-  connectionString: 'postgresql://postgres.idtxtnsersuhafgtzaab:Yuichikatagiri@aws-1-ap-south-1.pooler.supabase.com:6543/postgres',
+  connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false,
-  },
+    rejectUnauthorized: false
+  }
 });
 
-pool.connect()
-  .then(() => console.log('✅ Connected to Supabase PostgreSQL'))
-  .catch(err => console.error('❌ Database connection failed:', err.message));
+pool
+  .connect()
+  .then(() => console.log("✅ Connected to Supabase PostgreSQL"))
+  .catch((err) =>
+    console.error("❌ DB connection failed:", err.message)
+  );
 
 export default pool;
