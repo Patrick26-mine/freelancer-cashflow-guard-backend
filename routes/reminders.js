@@ -270,3 +270,26 @@ router.delete("/:id", param("id").custom(isUUID), async (req, res) => {
 });
 
 export default router;
+router.get("/:id", 
+  param("id").custom(isUUID), 
+  async (req, res) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
+
+    const id = req.params.id;
+
+    if (process.env.USE_MOCK_DB === "true") {
+      if (mockStore.has(id)) return res.json(mockStore.get(id));
+      return res.status(404).json({ error: "Not found" });
+    }
+
+    const sql = `SELECT * FROM reminder WHERE reminder_id = $1`;
+    const result = await db.query(sql, [id]);
+
+    if (!result.rows.length)
+      return res.status(404).json({ error: "Not found" });
+
+    return res.json(result.rows[0]);
+});

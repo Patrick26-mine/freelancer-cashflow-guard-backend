@@ -1,33 +1,26 @@
-// app.js (ESM version)
 import express from "express";
 import cors from "cors";
+
 import remindersRouter from "./routes/reminders.js";
+import invoicesRouter from "./routes/invoice/invoiceRoutes.js";
+import clientsRouter from "./routes/clients.js"; // ✅ add this
 
 const app = express();
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Routes
+// ✅ Mount all routers
 app.use("/api/reminders", remindersRouter);
+app.use("/api/invoices", invoicesRouter);
+app.use("/api/clients", clientsRouter); // ✅ now clients API works
 
-// Health check
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// 404 handler
-app.use((req, res, next) => {
+app.use((req, res) => {
   res.status(404).json({ error: "Not found" });
-});
-
-// Central error handler
-app.use((err, req, res, next) => {
-  console.error(err?.stack || err);
-  res.status(err.status || 500).json({
-    error: err.message || "Internal Server Error",
-  });
 });
 
 export default app;
